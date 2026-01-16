@@ -97,6 +97,9 @@ else:
 
 # Configuración de base de datos según entorno
 if 'VERCEL' in os.environ:
+    # Permitir todos los hosts en Vercel para evitar errores de dominio
+    ALLOWED_HOSTS = ['*']
+    
     # Vercel: PostgreSQL (Vercel Postgres usa POSTGRES_URL o DATABASE_URL)
     database_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
     
@@ -104,14 +107,24 @@ if 'VERCEL' in os.environ:
     if database_url and database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=database_url,
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True,
-        )
-    }
+    if database_url:
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=database_url,
+                conn_max_age=600,
+                conn_health_checks=True,
+                ssl_require=True,
+            )
+        }
+    else:
+        # Fallback de seguridad: SQLite en memoria/tmp (sólo para que arranque)
+        print("⚠️ ADVERTENCIA: No se detectó base de datos PostgreSQL. Usando SQLite temporal.")
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': '/tmp/db.sqlite3',
+            }
+        }
 elif os.environ.get('DATABASE_URL'):
     # Otros entornos con DATABASE_URL
     DATABASES = {
