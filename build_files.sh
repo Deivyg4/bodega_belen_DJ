@@ -1,12 +1,17 @@
 #!/bin/bash
 
-# Build script for Vercel
-echo "Building project..."
+echo "🚀 Iniciando Build..."
 
-# Install dependencies
-pip install -r requirements.txt
+# Asegurar pip disponible
+python3.9 -m ensurepip 2>/dev/null || true
+python3.9 -m pip install --upgrade pip
 
-# Collect static files
-python manage.py collectstatic --noinput --clear
+# Instalar dependencias
+echo "📦 Instalando requerimientos..."
+python3.9 -m pip install -r requirements.txt
 
-echo "Build completed!"
+# Colectar estáticos
+echo "🎨 Colectando archivos estáticos..."
+python3.9 manage.py collectstatic --noinput --clear
+
+echo "✅ Build completado!"
