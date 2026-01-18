@@ -58,6 +58,8 @@ def producto_create(request):
             precio_usd = request.POST.get('precio_usd')
             cantidad = request.POST.get('cantidad', 0)
             stock_minimo = request.POST.get('stock_minimo', 5)
+            # Checkbox returns 'on' if checked, None otherwise
+            es_por_peso = request.POST.get('es_por_peso') == 'on'
             
             producto = Producto.objects.create(
                 codigo=codigo,
@@ -66,7 +68,8 @@ def producto_create(request):
                 categoria_id=categoria_id if categoria_id else None,
                 precio_usd=precio_usd,
                 cantidad=cantidad,
-                stock_minimo=stock_minimo
+                stock_minimo=stock_minimo,
+                es_por_peso=es_por_peso
             )
             
             messages.success(request, f'Producto {producto.nombre} creado exitosamente')
@@ -94,6 +97,7 @@ def producto_update(request, pk):
             producto.precio_usd = request.POST.get('precio_usd')
             producto.cantidad = request.POST.get('cantidad')
             producto.stock_minimo = request.POST.get('stock_minimo')
+            producto.es_por_peso = request.POST.get('es_por_peso') == 'on'
             producto.save()
             
             messages.success(request, f'Producto {producto.nombre} actualizado')
@@ -176,7 +180,7 @@ def movimiento_create(request):
         try:
             producto_id = request.POST.get('producto')
             tipo = request.POST.get('tipo')
-            cantidad = int(request.POST.get('cantidad'))
+            cantidad = Decimal(request.POST.get('cantidad'))
             motivo = request.POST.get('motivo')
             
             producto = get_object_or_404(Producto, id=producto_id)

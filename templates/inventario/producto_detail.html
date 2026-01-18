@@ -51,9 +51,16 @@
                         <p><strong>Precio Bs:</strong> Bs {{ producto.precio_bs|floatformat:2 }}</p>
                         <p><strong>Stock Actual:</strong>
                             {% if producto.stock_bajo %}
-                            <span class="badge bg-danger">{{ producto.cantidad }} (⚠️ Stock Bajo)</span>
+                            <span class="badge bg-danger">
+                                {% if producto.es_por_peso %}{{ producto.cantidad|floatformat:3 }} Kg{% else %}{{
+                                producto.cantidad|floatformat:0 }} Und{% endif %}
+                                (⚠️ Stock Bajo)
+                            </span>
                             {% else %}
-                            <span class="badge bg-success">{{ producto.cantidad }}</span>
+                            <span class="badge bg-success">
+                                {% if producto.es_por_peso %}{{ producto.cantidad|floatformat:3 }} Kg{% else %}{{
+                                producto.cantidad|floatformat:0 }} Und{% endif %}
+                            </span>
                             {% endif %}
                         </p>
                         <p><strong>Stock Mínimo:</strong> {{ producto.stock_minimo }}</p>

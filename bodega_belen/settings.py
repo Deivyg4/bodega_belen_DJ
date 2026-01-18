@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -49,14 +50,18 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise para archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'bodega_belen.middleware.AutoLoginMiddleware',  # Auto-login para negocio pequeño
 ]
+
+# Solo usar WhiteNoise si NO es un ejecutable congelado
+if not getattr(sys, 'frozen', False):
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'bodega_belen.urls'
 
@@ -85,7 +90,10 @@ WSGI_APPLICATION = 'bodega_belen.wsgi.application'
 
 import sys
 import os
-import dj_database_url
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
 
 # Detectar si se está ejecutando como .exe
 if getattr(sys, 'frozen', False):
@@ -96,7 +104,7 @@ else:
     DB_DIR = BASE_DIR
 
 # Configuración de base de datos según entorno
-if 'VERCEL' in os.environ:
+if 'VERCEL' in os.environ and dj_database_url:
     # Permitir todos los hosts en Vercel para evitar errores de dominio
     ALLOWED_HOSTS = ['*']
     
@@ -125,7 +133,7 @@ if 'VERCEL' in os.environ:
                 'NAME': '/tmp/db.sqlite3',
             }
         }
-elif os.environ.get('DATABASE_URL'):
+elif os.environ.get('DATABASE_URL') and dj_database_url:
     # Otros entornos con DATABASE_URL
     DATABASES = {
         'default': dj_database_url.config(
@@ -189,7 +197,12 @@ STATICFILES_DIRS = [
 ]
 
 # WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if getattr(sys, 'frozen', False):
+    # En modo ejecutable (.exe), usar almacenamiento por defecto y no WhiteNoise
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+else:
+    # En desarrollo/producción web, usar WhiteNoise
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'

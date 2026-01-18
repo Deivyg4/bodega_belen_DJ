@@ -27,6 +27,12 @@ class Producto(models.Model):
     descripcion = models.TextField(blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='productos')
     
+    # Identificador de tipo de venta
+    es_por_peso = models.BooleanField(
+        default=False,
+        help_text='Si está marcado, el producto se vende por peso (Kg) y acepta decimales'
+    )
+    
     # Precios
     precio_usd = models.DecimalField(
         max_digits=10, 
@@ -35,15 +41,19 @@ class Producto(models.Model):
         help_text='Precio en dólares americanos'
     )
     
-    # Stock
-    cantidad = models.IntegerField(
-        default=0,
-        validators=[MinValueValidator(0)],
+    # Stock (Ahora Decimal para soportar peso)
+    cantidad = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,  # 3 decimales para precisión en peso (ej: 0.125 kg)
+        default=Decimal('0.000'),
+        validators=[MinValueValidator(Decimal('0.000'))],
         help_text='Cantidad disponible en inventario'
     )
-    stock_minimo = models.IntegerField(
-        default=5,
-        validators=[MinValueValidator(0)],
+    stock_minimo = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        default=Decimal('5.000'),
+        validators=[MinValueValidator(Decimal('0.000'))],
         help_text='Cantidad mínima de alerta'
     )
     
@@ -83,6 +93,7 @@ class Producto(models.Model):
 
     def reducir_stock(self, cantidad):
         """Reduce el stock del producto"""
+        cantidad = Decimal(str(cantidad))
         if self.cantidad >= cantidad:
             self.cantidad -= cantidad
             self.save()
@@ -91,7 +102,7 @@ class Producto(models.Model):
 
     def aumentar_stock(self, cantidad):
         """Aumenta el stock del producto"""
-        self.cantidad += cantidad
+        self.cantidad += Decimal(str(cantidad))
         self.save()
 
 
@@ -105,9 +116,12 @@ class MovimientoInventario(models.Model):
     
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='movimientos')
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
-    cantidad = models.IntegerField(validators=[MinValueValidator(1)])
-    cantidad_anterior = models.IntegerField()
-    cantidad_nueva = models.IntegerField()
+    
+    # Cantidades con soporte decimal
+    cantidad = models.DecimalField(max_digits=10, decimal_places=3, validators=[MinValueValidator(Decimal('0.001'))])
+    cantidad_anterior = models.DecimalField(max_digits=10, decimal_places=3)
+    cantidad_nueva = models.DecimalField(max_digits=10, decimal_places=3)
+    
     motivo = models.TextField()
     usuario = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
     fecha = models.DateTimeField(auto_now_add=True)

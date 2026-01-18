@@ -63,7 +63,7 @@ class Factura(models.Model):
     
     # Información básica
     numero = models.CharField(max_length=20, unique=True, editable=False)
-    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='facturas')
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='facturas', null=True, blank=True, help_text='Cliente de la venta. Si es None, es un cliente casual.')
     tipo_venta = models.CharField(max_length=10, choices=TIPO_VENTA_CHOICES, default='CONTADO')
     
     # Montos
@@ -96,7 +96,8 @@ class Factura(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.numero} - {self.cliente.nombre_completo}"
+        cliente_nombre = self.cliente.nombre_completo if self.cliente else "Cliente Casual"
+        return f"{self.numero} - {cliente_nombre}"
     
     def save(self, *args, **kwargs):
         # Generar número de factura si es nueva
@@ -171,7 +172,7 @@ class ItemFactura(models.Model):
     """Items de una factura"""
     factura = models.ForeignKey(Factura, on_delete=models.CASCADE, related_name='items')
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
-    cantidad = models.IntegerField(validators=[MinValueValidator(1)])
+    cantidad = models.DecimalField(max_digits=10, decimal_places=3, validators=[MinValueValidator(Decimal('0.001'))])
     precio_unitario_usd = models.DecimalField(max_digits=10, decimal_places=2)
     descuento_usd = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     

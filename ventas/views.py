@@ -190,7 +190,13 @@ def factura_create(request):
                 tipo_venta = request.POST.get('tipo_venta')
                 descuento_usd = Decimal(request.POST.get('descuento_usd', '0.00'))
                 
-                cliente = get_object_or_404(Cliente, id=cliente_id)
+                cliente = None
+                if cliente_id:
+                    cliente = get_object_or_404(Cliente, id=cliente_id)
+                else:
+                    # Si no hay cliente, la venta debe ser de CONTADO obligatoriamente
+                    if tipo_venta == 'CREDITO':
+                         raise ValueError('Venta a crédito requiere asignar un cliente')
                 
                 # Crear factura
                 factura = Factura.objects.create(
@@ -208,7 +214,7 @@ def factura_create(request):
                 for i, producto_id in enumerate(productos_ids):
                     if producto_id:
                         producto = get_object_or_404(Producto, id=producto_id)
-                        cantidad = int(cantidades[i])
+                        cantidad = Decimal(cantidades[i])
                         precio = Decimal(precios[i])
                         
                         # Verificar stock
@@ -230,7 +236,7 @@ def factura_create(request):
                 factura.calcular_totales()
                 
                 # Verificar límite de crédito
-                if tipo_venta == 'CREDITO':
+                if tipo_venta == 'CREDITO' and cliente:
                     if not cliente.puede_comprar_a_credito(factura.total_usd):
                         raise ValueError('El cliente ha excedido su límite de crédito')
                 

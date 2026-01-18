@@ -39,7 +39,8 @@
 
                     <div class="mb-3">
                         <label for="cantidad" class="form-label">Cantidad *</label>
-                        <input type="number" name="cantidad" id="cantidad" class="form-control" min="1" required>
+                        <input type="number" name="cantidad" id="cantidad" class="form-control" min="0.001" step="0.001"
+                            required>
                         <small class="form-text text-muted" id="cantidadHelp"></small>
                     </div>
 
@@ -114,9 +115,9 @@
         const cantidadHelp = document.getElementById('cantidadHelp');
 
         const productoOption = productoSelect.options[productoSelect.selectedIndex];
-        const stockActual = parseInt(productoOption.dataset.stock) || 0;
+        const stockActual = parseFloat(productoOption.dataset.stock) || 0;
         const tipo = tipoSelect.value;
-        const cantidad = parseInt(cantidadInput.value) || 0;
+        const cantidad = parseFloat(cantidadInput.value) || 0;
 
         if (!tipo || !cantidad || stockActual === 0) {
             previewAlert.style.display = 'none';
@@ -129,7 +130,7 @@
 
         if (tipo === 'ENTRADA') {
             nuevoStock = stockActual + cantidad;
-            mensaje = `Stock actual: ${stockActual} → Nuevo stock: <strong class="text-success">${nuevoStock}</strong> (+${cantidad})`;
+            mensaje = `Stock actual: ${stockActual} → Nuevo stock: <strong class="text-success">${nuevoStock.toFixed(3)}</strong> (+${cantidad})`;
             cantidadHelp.textContent = `Se agregarán ${cantidad} unidades al stock`;
             cantidadHelp.className = 'form-text text-success';
         } else if (tipo === 'SALIDA') {
@@ -139,7 +140,7 @@
                 cantidadHelp.textContent = `No puedes restar ${cantidad} unidades, solo hay ${stockActual}`;
                 cantidadHelp.className = 'form-text text-danger';
             } else {
-                mensaje = `Stock actual: ${stockActual} → Nuevo stock: <strong class="text-danger">${nuevoStock}</strong> (-${cantidad})`;
+                mensaje = `Stock actual: ${stockActual} → Nuevo stock: <strong class="text-danger">${nuevoStock.toFixed(3)}</strong> (-${cantidad})`;
                 cantidadHelp.textContent = `Se restarán ${cantidad} unidades del stock`;
                 cantidadHelp.className = 'form-text text-warning';
             }

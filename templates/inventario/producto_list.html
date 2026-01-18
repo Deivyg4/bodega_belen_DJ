@@ -88,9 +88,9 @@
                         <td>Bs {{ producto.precio_bs|floatformat:2 }}</td>
                         <td>
                             {% if producto.stock_bajo %}
-                            <span class="badge bg-danger">{{ producto.cantidad }}</span>
+                            <span class="badge bg-danger">{% if producto.es_por_peso %}{{ producto.cantidad|floatformat:3 }}{% else %}{{ producto.cantidad|floatformat:0 }}{% endif %}</span>
                             {% else %}
-                            <span class="badge bg-success">{{ producto.cantidad }}</span>
+                            <span class="badge bg-success">{% if producto.es_por_peso %}{{ producto.cantidad|floatformat:3 }}{% else %}{{ producto.cantidad|floatformat:0 }}{% endif %}</span>
                             {% endif %}
                         </td>
                         <td>{{ producto.stock_minimo }}</td>
